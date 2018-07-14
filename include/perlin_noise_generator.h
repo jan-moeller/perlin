@@ -96,6 +96,12 @@ static_assert(smoothstep<2>(0.3) - 0.16308 < 1e-5);
 static_assert(smoothstep<2>(0.5) - 0.5 < 1e-5);
 static_assert(smoothstep<2>(1) - 1 < 1e-5);
 
+template<typename T>
+constexpr T mod(T k, T n) noexcept
+{
+    return ((k %= n) < 0) ? k + n : k;
+}
+
 
 template<int Dim, int Smoothness = 2, typename T = float, int NumGradients = 256, typename GridCoord = int>
 class perlin_noise_generator
@@ -179,9 +185,9 @@ private:
 
     constexpr vector<T, Dim> const& gradient_at(point<GridCoord, Dim> const& point) const noexcept
     {
-        GridCoord idx = point[Dim - 1] % NumGradients;
+        GridCoord idx = mod(point[Dim - 1], NumGradients);
         for (int i = Dim - 2; i >= 0; --i)
-            idx = (point[i] + m_permutations[idx]) % NumGradients;
+            idx = mod((point[i] + m_permutations[idx]), NumGradients);
 
         return m_gradients[idx];
     }
