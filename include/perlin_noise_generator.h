@@ -100,13 +100,18 @@ static_assert(smoothstep<2>(1) - 1 < 1e-5);
 template<int Dim, int Smoothness = 2, typename T = float, int NumGradients = 256, typename GridCoord = int>
 class perlin_noise_generator
 {
+public:
     static_assert(Dim > 0, "Must have at least one dimension");
     static_assert(Smoothness >= 0, "Smoothness must be positive");
     static_assert(NumGradients > 0, "Must allow at least one pre-computed gradient");
     static_assert(std::is_arithmetic_v<T>, "T must be an arithmetic type");
     static_assert(std::is_integral_v<GridCoord>, "GridCoord must be an integral type");
 
-public:
+    using result_t = T;
+
+    static constexpr const int dimensions = Dim;
+    static constexpr const int smoothness = Smoothness;
+
     explicit perlin_noise_generator(std::uint_fast32_t seed = std::random_device()()) noexcept
             : m_rand_engine(seed)
     {
@@ -116,15 +121,6 @@ public:
         {
             return vector<T, Dim>::make_rand_unit_vec(m_rand_engine);
         });
-
-        // DEBUG:
-        auto normalizer = std::accumulate(m_gradients.begin(), m_gradients.end(), vector<T, Dim>::from_value(0));
-        auto avgGrad = std::accumulate(m_gradients.begin(), m_gradients.end(), vector<T, Dim>::from_value(1),
-                                       [normalizer](vector<T, Dim> const& v1, vector<T, Dim> const& v2)
-                                       {
-                                           return v1 / normalizer + v2 / normalizer;
-                                       });
-        std::cout << "avg gradient: " << avgGrad << ", normalizer: " << normalizer << std::endl;
     }
 
     constexpr T at(point<T, Dim> const& p) const noexcept

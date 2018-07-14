@@ -4,6 +4,7 @@
 #include "point.h"
 #include "vector.h"
 #include "perlin_noise_generator.h"
+#include "fractal_noise_generator.h"
 
 #include "png.h"
 
@@ -29,7 +30,7 @@ int main()
 
     n_choose_k(7, 3);
 
-    perlin_noise_generator<2> gen{42};
+    fractal_noise_generator<perlin_noise_generator<2>, 5> gen{42};
     std::cout << gen.at(point2d_f{0.2f, 0.2f}) << std::endl;
     std::cout << gen.at(point2d_f{1.2f, 0.2f}) << std::endl;
     float showcells = 4;
@@ -100,7 +101,7 @@ int main()
     // Write image data
     int x, y;
     for (y=0 ; y<height ; y++) {
-        png_byte min = 256;
+        png_byte min = 255;
         png_byte max = 0;
         for (x=0 ; x<width ; x++) {
             float xPos = (float)x/(width / showcells);
