@@ -8,6 +8,7 @@
 #include <random>
 #include <bitset>
 #include <numeric>
+#include <algorithm>
 #include <cmath>
 
 #include <iostream>
@@ -175,7 +176,8 @@ public:
             s /= 2;
         }
 
-        return dot_products[0];
+        // Account for rounding errors
+        return std::clamp(dot_products[0], static_cast<result_t>(-1), static_cast<result_t>(1));
     }
 
 private:
