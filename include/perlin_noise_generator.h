@@ -172,7 +172,7 @@ public:
      * @param p Point of evaluation
      * @return  Noise function value at the specified point
      */
-    constexpr result_t at(point<result_t, Dim> const& p) const noexcept
+    result_t at(point<result_t, Dim> const& p) const noexcept
     {
         // Compute neighboring grid points
         constexpr int const NumNeighbors = ipow(2, Dim);

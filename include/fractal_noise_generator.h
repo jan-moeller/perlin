@@ -50,7 +50,7 @@ public:
      * @param p Point of evaluation
      * @return  Noise function value at the specified point
      */
-    constexpr result_t at(point<result_t, dimensions> const& p) const noexcept
+    result_t at(point<result_t, dimensions> const& p) const noexcept
     {
         result_t result = 0;
         for (int i = 1; i <= Octaves; ++i)

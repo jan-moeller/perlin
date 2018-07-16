@@ -51,7 +51,7 @@ public:
      * @param p Point of evaluation
      * @return  Noise function value at the specified point
      */
-    constexpr result_t at(point<result_t, dimensions> const& p) const noexcept
+    result_t at(point<result_t, dimensions> const& p) const noexcept
     {
         constexpr result_t const pi = 3.1415926535897932384626433832795028841971;
         constexpr result_t const two_pi = 2 * pi;
