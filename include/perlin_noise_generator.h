@@ -11,8 +11,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include <iostream>
-
 #include "point.h"
 #include "vector.h"
 
@@ -117,9 +115,26 @@ static_assert(mod(-6, 3) == 0);
 static_assert(mod(-7, 3) == 2);
 
 
+/**
+ * Generates perlin noise in arbitrary dimensions.
+ *
+ * @details Perlin noise is a type of coherent noise. As such it has three properties:
+ *          1. Evaluating it at the same point will always give the same result
+ *          2. A small change in input will yield a small change in output
+ *          3. A large change in input results in a random change in output
+ *
+ *          Noise is generated in the [-1,1] domain.
+ *
+ * @tparam Dim          Dimensionality of the noise function
+ * @tparam Smoothness   Order of smoothstep function to use for interpolation
+ * @tparam Result       Arithmetic result type
+ * @tparam NumGradients Amount of random gradients to use. A larger number results in more randomness, but longer
+ *                      computation times.
+ * @tparam GridCoord    Integral grid coordinate type
+ */
 template<int Dim,
         int Smoothness = 2,
-        typename T = float,
+        typename Result = float,
         int NumGradients = 256,
         typename GridCoord = int>
 class perlin_noise_generator
@@ -128,32 +143,41 @@ public:
     static_assert(Dim > 0, "Must have at least one dimension");
     static_assert(Smoothness >= 0, "Smoothness must be positive");
     static_assert(NumGradients > 0, "Must allow at least one pre-computed gradient");
-    static_assert(std::is_arithmetic_v<T>, "T must be an arithmetic type");
+    static_assert(std::is_arithmetic_v<Result>, "Result must be an arithmetic type");
     static_assert(std::is_integral_v<GridCoord>, "GridCoord must be an integral type");
 
-    using result_t = T;
+    using result_t = Result;
     using grid_coord_t = GridCoord;
 
     static constexpr const int dimensions = Dim;
     static constexpr const int smoothness = Smoothness;
 
+    /**
+     * @param seed Random seed for noise generation
+     */
     explicit perlin_noise_generator(std::uint_fast32_t seed = std::random_device()()) noexcept
             : m_rand_engine(seed)
     {
-        std::iota(m_permutations.begin(), m_permutations.end(), T{0});
+        std::iota(m_permutations.begin(), m_permutations.end(), result_t{0});
         std::shuffle(m_permutations.begin(), m_permutations.end(), m_rand_engine);
         std::generate(m_gradients.begin(), m_gradients.end(), [this]()
         {
-            return vector<T, Dim>::make_rand_unit_vec(m_rand_engine);
+            return vector<result_t, Dim>::make_rand_unit_vec(m_rand_engine);
         });
     }
 
-    constexpr T at(point<T, Dim> const& p) const noexcept
+    /**
+     * Evaluate the noise function at a given point.
+     *
+     * @param p Point of evaluation
+     * @return  Noise function value at the specified point
+     */
+    constexpr result_t at(point<result_t, Dim> const& p) const noexcept
     {
         // Compute neighboring grid points
         constexpr int const NumNeighbors = ipow(2, Dim);
-        auto baseGridPoint = p.template floor<GridCoord>();
-        std::array<point<GridCoord, Dim>, NumNeighbors> m_nodes{};
+        auto baseGridPoint = p.template floor<grid_coord_t>();
+        std::array<point<grid_coord_t, Dim>, NumNeighbors> m_nodes{};
         std::generate(m_nodes.begin(), m_nodes.end(), [n = 0u, &baseGridPoint]() mutable
         {
             std::bitset<Dim> bits(n++);
@@ -167,16 +191,17 @@ public:
         });
 
         // Vectors from neighboring grid nodes to point
-        std::array<vector<T, Dim>, NumNeighbors> m_nodeVecs;
-        std::transform(m_nodes.begin(), m_nodes.end(), m_nodeVecs.begin(), [&p](point<GridCoord, Dim> const& n)
+        std::array<vector<result_t, Dim>, NumNeighbors> m_nodeVecs;
+        std::transform(m_nodes.begin(), m_nodes.end(), m_nodeVecs.begin(), [&p](point<grid_coord_t, Dim> const& n)
         {
-            return vector<T, Dim>::from_point(p) - vector<T, Dim>::from_point(n.template convert_to<T>());
+            return vector<result_t, Dim>::from_point(p) -
+                   vector<result_t, Dim>::from_point(n.template convert_to<result_t>());
         });
 
         // Compute dot products between node vectors and gradients
-        std::array<T, NumNeighbors> dot_products{};
+        std::array<result_t, NumNeighbors> dot_products{};
         std::transform(m_nodes.begin(), m_nodes.end(), m_nodeVecs.begin(), dot_products.begin(),
-                       [this](point<GridCoord, Dim> const& n, vector<T, Dim> const& nv)
+                       [this](point<grid_coord_t, Dim> const& n, vector<result_t, Dim> const& nv)
                        {
                            return dot(gradient_at(n), nv);
                        });
@@ -200,12 +225,12 @@ public:
 
 private:
     std::array<int, NumGradients> m_permutations{};
-    std::array<vector<T, Dim>, NumGradients> m_gradients{};
+    std::array<vector<result_t, Dim>, NumGradients> m_gradients{};
     std::mt19937 m_rand_engine;
 
-    constexpr vector<T, Dim> const& gradient_at(point<GridCoord, Dim> const& point) const noexcept
+    constexpr vector<result_t, Dim> const& gradient_at(point<grid_coord_t, Dim> const& point) const noexcept
     {
-        GridCoord idx = mod(point[Dim - 1], NumGradients);
+        grid_coord_t idx = mod(point[Dim - 1], NumGradients);
         for (int i = Dim - 2; i >= 0; --i)
             idx = mod((point[i] + m_permutations[idx]), NumGradients);
 
