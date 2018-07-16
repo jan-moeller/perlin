@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <type_traits>
 #include <ostream>
+#include <cmath>
 
 template<typename T, int Dim>
 class point
@@ -49,6 +50,24 @@ public:
         static_assert(std::is_arithmetic_v<U>, "Can only cast to points of other arithmetic types");
         point<U, Dim> result;
         std::transform(m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return e; });
+        return result;
+    }
+
+    template<typename U = T>
+    constexpr point<U, Dim> ceil() const noexcept
+    {
+        static_assert(std::is_arithmetic_v<U>, "Can only cast to points of other arithmetic types");
+        point<U, Dim> result;
+        std::transform(m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return std::ceil(e); });
+        return result;
+    }
+
+    template<typename U = T>
+    constexpr point<U, Dim> floor() const noexcept
+    {
+        static_assert(std::is_arithmetic_v<U>, "Can only cast to points of other arithmetic types");
+        point<U, Dim> result;
+        std::transform(m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return std::floor(e); });
         return result;
     }
 

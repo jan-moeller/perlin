@@ -134,7 +134,7 @@ public:
     {
         // Compute neighboring grid points
         constexpr int const NumNeighbors = ipow(2, Dim);
-        auto baseGridPoint = p.template convert_to<GridCoord>();
+        auto baseGridPoint = p.template floor<GridCoord>();
         std::array<point<GridCoord, Dim>, NumNeighbors> m_nodes{};
         std::generate(m_nodes.begin(), m_nodes.end(), [n = 0u, &baseGridPoint]() mutable
         {
