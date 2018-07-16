@@ -14,15 +14,17 @@
 
 #include "point.h"
 
-template<class Gen, int Octaves = 3>
+template<class Gen,
+        int Octaves = 3>
 class fractal_noise_generator
 {
 public:
     static_assert(Octaves > 0, "Must have at least one octave");
 
-    static constexpr const int dimensions = Gen::dimensions;
-
     using result_t = typename Gen::result_t;
+    using grid_coord_t = typename Gen::grid_coord_t;
+
+    static constexpr const int dimensions = Gen::dimensions;
 
     explicit fractal_noise_generator(std::uint_fast32_t seed = std::random_device()()) noexcept
             : m_noiseGen(seed)

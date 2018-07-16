@@ -102,9 +102,26 @@ constexpr T mod(T k, T n) noexcept
 {
     return ((k %= n) < 0) ? k + n : k;
 }
+static_assert(mod(0, 3) == 0);
+static_assert(mod(1, 3) == 1);
+static_assert(mod(2, 3) == 2);
+static_assert(mod(3, 3) == 0);
+static_assert(mod(5, 3) == 2);
+static_assert(mod(6, 3) == 0);
+static_assert(mod(7, 3) == 1);
+static_assert(mod(-1, 3) == 2);
+static_assert(mod(-2, 3) == 1);
+static_assert(mod(-3, 3) == 0);
+static_assert(mod(-5, 3) == 1);
+static_assert(mod(-6, 3) == 0);
+static_assert(mod(-7, 3) == 2);
 
 
-template<int Dim, int Smoothness = 2, typename T = float, int NumGradients = 256, typename GridCoord = int>
+template<int Dim,
+        int Smoothness = 2,
+        typename T = float,
+        int NumGradients = 256,
+        typename GridCoord = int>
 class perlin_noise_generator
 {
 public:
@@ -115,6 +132,7 @@ public:
     static_assert(std::is_integral_v<GridCoord>, "GridCoord must be an integral type");
 
     using result_t = T;
+    using grid_coord_t = GridCoord;
 
     static constexpr const int dimensions = Dim;
     static constexpr const int smoothness = Smoothness;

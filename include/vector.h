@@ -152,13 +152,18 @@ constexpr T dot(vector<T, Dim> const& v1, vector<T, Dim> const& v2) noexcept
 }
 
 template<typename T, int Dim>
+constexpr T sq_magnitude(vector<T, Dim> const& v) noexcept
+{
+    return std::accumulate(v.begin(), v.end(), T{0}, [](T const& e1, T const e2)
+    {
+        return e1 + (e2 * e2);
+    });
+}
+
+template<typename T, int Dim>
 constexpr T magnitude(vector<T, Dim> const& v) noexcept
 {
-    return std::sqrt(
-            std::accumulate(v.begin(), v.end(), T{0}, [](T const& e1, T const e2)
-            {
-                return e1 + (e2 * e2);
-            }));
+    return std::sqrt(sq_magnitude(v));
 }
 
 template<typename T, int Dim>
