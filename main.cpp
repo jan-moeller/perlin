@@ -9,6 +9,8 @@
 #include "fractal_noise_generator.h"
 #include "seamless_noise_generator_2d.h"
 
+using namespace noise;
+
 template<class Gen>
 int generate_png(Gen& gen, std::string const& filename, int width, int height, int cellsX, int cellsY, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
 {
