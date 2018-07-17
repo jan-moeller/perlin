@@ -10,7 +10,7 @@
 #include "seamless_noise_generator_2d.h"
 
 template<class Gen>
-int generate_png(Gen& gen, std::string const& filename, int width, int height, int showcells, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
+int generate_png(Gen& gen, std::string const& filename, int width, int height, int cellsX, int cellsY, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
 {
     char const* title = filename.c_str();
     FILE* fp = nullptr;
@@ -89,8 +89,8 @@ int generate_png(Gen& gen, std::string const& filename, int width, int height, i
 //        std::cout << std::endl;
         for (x = 0; x < width; x++)
         {
-            float xPos = (float) x / (width / (float) showcells);
-            float yPos = (float) y / (height / (float) showcells);
+            float xPos = (float) x / (width / (float) cellsX);
+            float yPos = (float) y / (height / (float) cellsY);
             auto val = std::clamp(gen.at(mapPoint(xPos, yPos)), -1.f, 1.f);
             row[x] = png_byte((val + 1) / 2.f * 255);
 
@@ -111,7 +111,7 @@ int generate_png(Gen& gen, std::string const& filename, int width, int height, i
 }
 
 template<class Gen>
-int generate_world_png(Gen& gen, std::string const& filename, int width, int height, int showcells, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
+int generate_world_png(Gen& gen, std::string const& filename, int width, int height, int cellsX, int cellsY, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
 {
     char const* title = filename.c_str();
     FILE* fp = nullptr;
@@ -200,8 +200,8 @@ int generate_world_png(Gen& gen, std::string const& filename, int width, int hei
     {
         for (x = 0; x < width; x++)
         {
-            float xPos = (float) x / (width / (float) showcells);
-            float yPos = (float) y / (height / (float) showcells);
+            float xPos = (float) x / (width / (float) cellsX);
+            float yPos = (float) y / (height / (float) cellsY);
             auto val = std::clamp(gen.at(mapPoint(xPos, yPos)), -1.f, 1.f);
             auto colorIter = colors.lower_bound(val);
             if (colorIter == colors.begin())
@@ -227,82 +227,64 @@ int generate_world_png(Gen& gen, std::string const& filename, int width, int hei
 
 int main()
 {
-    point2d_f p{1.337f, 42.f};
-
-    vector<float, 2> v1{42.f, 13.f};
-    vector<float, 2> v2{1.f, 2.f};
-
-    std::cout << "v1: " << v1 << std::endl;
-    std::cout << "v2: " << v2 << std::endl;
-    std::cout << std::endl;
-    std::cout << "v1 + v2: " << (v1 + v2) << std::endl;
-    std::cout << "v1 - v2: " << v1 - v2 << std::endl;
-    std::cout << "-v1: " << -v1 << std::endl;
-    std::cout << "v1 * 2: " << v1 * 2 << std::endl;
-    std::cout << "v1 dot v2: " << dot(v1, v2) << std::endl;
-    std::cout << "|v1|: " << magnitude(v1) << std::endl;
-    std::cout << "v1/|v1|: " << normalized(v1) << std::endl;
-
-    std::cout << "p.convert_to<int>(): " << p.convert_to<int>() << std::endl;
-    std::cout << "p.floor<int>(): " << p.floor<int>() << std::endl;
-    std::cout << "p.ceil<int>(): " << p.ceil<int>() << std::endl;
-
-    n_choose_k(7, 3);
-
     bool const enable2d = false;
     bool const enable3d = false;
     bool const enable4d = false;
     bool const enableSeamless = true;
     bool const enableWorld = true;
 
-    constexpr int const showcells = 4;
-    int const width = 512;
+    constexpr int const cellsX = 6;
+    constexpr int const cellsY = 4;
+    int const width = 512 + 256;
     int const height = 512;
+    std::uint_fast32_t seed = 10;
+    constexpr int smoothness = 2;
+    constexpr int octaves = 50;
 
     if (enable2d)
     {
         // 2d
-        using Gen = perlin_noise_generator<2>;
-        Gen gen{42};
-        generate_png(gen, "2d.png", width, height, showcells, [](float x, float y) {return point2d_f{x, y};});
+        using Gen = perlin_noise_generator<2, smoothness>;
+        Gen gen{seed};
+        generate_png(gen, "2d.png", width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
     }
 
     if (enable3d)
     {
         // 3d
-        using Gen = perlin_noise_generator<3>;
-        Gen gen{42};
+        using Gen = perlin_noise_generator<3, smoothness>;
+        Gen gen{seed};
         for (int i = 0; i < 10; ++i)
         {
-            generate_png(gen, "3d_" + std::to_string(i) + ".png", width, height, showcells, [i](float x, float y) {return point3d_f{x, y, i/8.f};});
+            generate_png(gen, "3d_" + std::to_string(i) + ".png", width, height, cellsX, cellsY, [i](float x, float y) {return point3d_f{x, y, i/8.f};});
         }
     }
 
     if (enable4d)
     {
         // 4d
-        using Gen = perlin_noise_generator<4>;
-        Gen gen{42};
+        using Gen = perlin_noise_generator<4, smoothness>;
+        Gen gen{seed};
         for (int i = 0; i < 10; ++i)
         {
-            generate_png(gen, "4d_" + std::to_string(i) + ".png", width, height, showcells, [i](float x, float y) {return point4d_f{x, y, i/8.f, i/8.f};});
+            generate_png(gen, "4d_" + std::to_string(i) + ".png", width, height, cellsX, cellsY, [i](float x, float y) {return point4d_f{x, y, i/8.f, i/8.f};});
         }
     }
 
     if (enableSeamless)
     {
         // seamless
-        using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, 1>, 10>, showcells, showcells>;
-        Gen gen{0};
-        generate_png(gen, "seamless.png", width, height, showcells, [](float x, float y) {return point2d_f{x, y};});
+        using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves>, cellsX, cellsY>;
+        Gen gen{seed};
+        generate_png(gen, std::to_string(seed) + "_seamless.png", width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
     }
 
     if (enableWorld)
     {
         // seamless world generation
-        using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, 1>, 10>, showcells, showcells>;
-        Gen gen{0};
-        generate_world_png(gen, "world.png", width, height, showcells, [](float x, float y) {return point2d_f{x, y};});
+        using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves>, cellsX, cellsY>;
+        Gen gen{seed};
+        generate_world_png(gen, std::to_string(seed) + "_world.png", width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
     }
 
     return 0;
