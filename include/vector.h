@@ -75,6 +75,7 @@ public:
     constexpr vector& operator+=(vector const& other) noexcept
     {
         std::transform(begin(), end(), other.begin(), begin(), std::plus<T>{});
+        return *this;
     }
     constexpr friend vector operator+(vector const& v1, vector const& v2) noexcept
     {
@@ -86,6 +87,7 @@ public:
     constexpr vector& operator-=(vector const& other) noexcept
     {
         std::transform(begin(), end(), other.begin(), begin(), std::minus<T>{});
+        return *this;
     }
     constexpr friend vector operator-(vector const& v1, vector const& v2) noexcept
     {
@@ -103,6 +105,7 @@ public:
     constexpr vector& operator*=(T const& scalar) noexcept
     {
         std::transform(begin(), end(), begin(), [&scalar](T& e) { return e * scalar; });
+        return *this;
     }
     constexpr friend vector operator*(vector const& v, T const& scalar) noexcept
     {
@@ -114,6 +117,7 @@ public:
     constexpr vector& operator*=(vector const& vec) noexcept
     {
         std::transform(begin(), end(), vec.begin(), begin(), std::multiplies<>());
+        return *this;
     }
     constexpr friend vector operator*(vector const& v1, vector const& v2) noexcept
     {
@@ -125,6 +129,7 @@ public:
     constexpr vector& operator/=(T const& scalar) noexcept
     {
         std::transform(begin(), end(), begin(), [&scalar](T& e) { return e / scalar; });
+        return *this;
     }
     constexpr friend vector operator/(vector const& v, T const& scalar) noexcept
     {
@@ -136,6 +141,7 @@ public:
     constexpr vector& operator/=(vector const& vec) noexcept
     {
         std::transform(begin(), end(), vec.begin(), begin(), std::divides<>());
+        return *this;
     }
     constexpr friend vector operator/(vector const& v1, vector const& v2) noexcept
     {
@@ -182,6 +188,8 @@ constexpr std::ostream& operator<<(std::ostream& os, vector<T, Dim> const& v) no
     for (int i = 1; i < Dim; ++i)
         os << ", " << v[i];
     os << " ]";
+
+    return os;
 }
 
 template<typename T>

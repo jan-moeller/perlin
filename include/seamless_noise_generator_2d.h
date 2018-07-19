@@ -11,6 +11,7 @@
 
 #include <random>
 
+#include "math.h"
 #include "point.h"
 
 namespace noise
@@ -56,7 +57,7 @@ namespace noise
          */
         result_t at(point<result_t, dimensions> const& p) const noexcept
         {
-            constexpr result_t const pi = 3.1415926535897932384626433832795028841971;
+            constexpr result_t const pi = constants<result_t>::pi;
             constexpr result_t const two_pi = 2 * pi;
 
             auto s = p[0] / static_cast<result_t>(Width);

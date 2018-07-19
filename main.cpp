@@ -2,6 +2,7 @@
 
 #include <png.h>
 #include <map>
+#include <chrono>
 
 #include "point.h"
 #include "vector.h"
@@ -11,8 +12,43 @@
 
 using namespace noise;
 
+template <typename Gen>
+struct noisemap
+{
+    int m_width;
+    int m_height;
+    std::vector<typename Gen::result_t> m_values;
+
+    noisemap(int width, int height)
+    : m_width(width), m_height(height)
+    {
+        m_values.resize(width * height);
+    }
+
+    noisemap() = default;
+};
+
 template<class Gen>
-int generate_png(Gen& gen, std::string const& filename, int width, int height, int cellsX, int cellsY, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
+noisemap<Gen> generate_noise_map(Gen& gen, int width, int height, int cellsX, int cellsY, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
+{
+    noisemap<Gen> result{width, height};
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            float xPos = (float) x / (width / (float) cellsX);
+            float yPos = (float) y / (height / (float) cellsY);
+            auto val = std::clamp(gen.at(mapPoint(xPos, yPos)), -1.f, 1.f);
+            result.m_values[x + width * y] = val;
+        }
+    }
+
+    return result;
+}
+
+template<class Gen>
+int generate_png(noisemap<Gen> const& map, std::string const& filename)
 {
     char const* title = filename.c_str();
     FILE* fp = nullptr;
@@ -64,7 +100,7 @@ int generate_png(Gen& gen, std::string const& filename, int width, int height, i
     png_init_io(png_ptr, fp);
 
     // Write header (8 bit grayscale depth)
-    png_set_IHDR(png_ptr, info_ptr, width, height,
+    png_set_IHDR(png_ptr, info_ptr, map.m_width, map.m_height,
                  8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
@@ -82,21 +118,15 @@ int generate_png(Gen& gen, std::string const& filename, int width, int height, i
 
     // Allocate memory for one row (1 bytes per pixel - Grayscale)
     std::vector<png_byte> row;
-    row.resize(width);
+    row.resize(map.m_width);
 
     // Write image data
-    int x, y;
-    for (y = 0; y < height; y++)
+    for (int y = 0; y < map.m_height; y++)
     {
-//        std::cout << std::endl;
-        for (x = 0; x < width; x++)
+        for (int x = 0; x < map.m_width; x++)
         {
-            float xPos = (float) x / (width / (float) cellsX);
-            float yPos = (float) y / (height / (float) cellsY);
-            auto val = std::clamp(gen.at(mapPoint(xPos, yPos)), -1.f, 1.f);
+            auto val = map.m_values[x + map.m_width * y];
             row[x] = png_byte((val + 1) / 2.f * 255);
-
-//            std::cout << val << ", ";
 
             // Mark grid corners
 //            if (((std::ceil(xPos) - xPos) < 0.000001f) && ((std::ceil(yPos) - yPos) < 0.000001f))
@@ -113,7 +143,7 @@ int generate_png(Gen& gen, std::string const& filename, int width, int height, i
 }
 
 template<class Gen>
-int generate_world_png(Gen& gen, std::string const& filename, int width, int height, int cellsX, int cellsY, std::function<point<typename Gen::result_t, Gen::dimensions>(typename Gen::result_t, typename Gen::result_t)> mapPoint)
+int generate_world_png(noisemap<Gen> const& map, std::string const& filename)
 {
     char const* title = filename.c_str();
     FILE* fp = nullptr;
@@ -165,7 +195,7 @@ int generate_world_png(Gen& gen, std::string const& filename, int width, int hei
     png_init_io(png_ptr, fp);
 
     // Write header (8 bit rgb depth)
-    png_set_IHDR(png_ptr, info_ptr, width, height,
+    png_set_IHDR(png_ptr, info_ptr, map.m_width, map.m_height,
                  8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
@@ -183,28 +213,26 @@ int generate_world_png(Gen& gen, std::string const& filename, int width, int hei
 
     // Allocate memory for one row (3 bytes per pixel - RGB)
     std::vector<png_byte> row;
-    row.resize(width * 3);
+    row.resize(map.m_width * 3);
 
     // Color scale
     using Color = std::array<png_byte, 3>;
     std::map<float, Color> colors{
-            { 0.5f,  {255, 255, 255}}, // snow
-            { 0.35f, {150, 150, 160}}, // mountains
-            { 0.25f, { 60, 130,  30}}, // forest
-            { 0.15f, {120, 190,  90}}, // grass
-            { 0.1f,  {229, 221,   0}}, // shore
-            {-1.f,   {  0,   0, 255}}, // water
+            { 0.55f, {255, 255, 255}}, // snow
+            { 0.4f,  {150, 150, 160}}, // mountains
+            { 0.3f,  { 60, 130,  30}}, // forest
+            { 0.25f, {120, 190,  90}}, // grass
+            { 0.2f,  {229, 221,   0}}, // shore
+            { 0.15f, { 80,  80, 255}}, // shallow water
+            {-1.f,   {  0,   0, 255}}, // ocean
     };
 
     // Write image data
-    int x, y;
-    for (y = 0; y < height; y++)
+    for (int y = 0; y < map.m_height; y++)
     {
-        for (x = 0; x < width; x++)
+        for (int x = 0; x < map.m_width; x++)
         {
-            float xPos = (float) x / (width / (float) cellsX);
-            float yPos = (float) y / (height / (float) cellsY);
-            auto val = std::clamp(gen.at(mapPoint(xPos, yPos)), -1.f, 1.f);
+            auto val = map.m_values[x + map.m_width * y];
             auto colorIter = colors.lower_bound(val);
             if (colorIter == colors.begin())
             {
@@ -229,65 +257,28 @@ int generate_world_png(Gen& gen, std::string const& filename, int width, int hei
 
 int main()
 {
-    bool const enable2d = false;
-    bool const enable3d = false;
-    bool const enable4d = false;
-    bool const enableSeamless = true;
-    bool const enableWorld = true;
-
     constexpr int const cellsX = 6;
     constexpr int const cellsY = 4;
-    int const width = 512 + 256;
-    int const height = 512;
-    std::uint_fast32_t seed = 10;
+    int const width = 1300;
+    int const height = width * (2.f/3.f);
+    std::uint_fast32_t seed = 20;
     constexpr int smoothness = 2;
-    constexpr int octaves = 50;
+    constexpr int octaves = 100;
 
-    if (enable2d)
-    {
-        // 2d
-        using Gen = perlin_noise_generator<2, smoothness>;
-        Gen gen{seed};
-        generate_png(gen, "2d.png", width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
-    }
 
-    if (enable3d)
-    {
-        // 3d
-        using Gen = perlin_noise_generator<3, smoothness>;
-        Gen gen{seed};
-        for (int i = 0; i < 10; ++i)
-        {
-            generate_png(gen, "3d_" + std::to_string(i) + ".png", width, height, cellsX, cellsY, [i](float x, float y) {return point3d_f{x, y, i/8.f};});
-        }
-    }
+    using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves>, cellsX, cellsY>;
+    noisemap<Gen> map;
 
-    if (enable4d)
-    {
-        // 4d
-        using Gen = perlin_noise_generator<4, smoothness>;
-        Gen gen{seed};
-        for (int i = 0; i < 10; ++i)
-        {
-            generate_png(gen, "4d_" + std::to_string(i) + ".png", width, height, cellsX, cellsY, [i](float x, float y) {return point4d_f{x, y, i/8.f, i/8.f};});
-        }
-    }
+    auto start = std::chrono::steady_clock::now();
 
-    if (enableSeamless)
-    {
-        // seamless
-        using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves>, cellsX, cellsY>;
-        Gen gen{seed};
-        generate_png(gen, std::to_string(seed) + "_seamless.png", width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
-    }
+    Gen gen{seed};
+    map = generate_noise_map(gen, width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
 
-    if (enableWorld)
-    {
-        // seamless world generation
-        using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves>, cellsX, cellsY>;
-        Gen gen{seed};
-        generate_world_png(gen, std::to_string(seed) + "_world.png", width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
-    }
+    auto end = std::chrono::steady_clock::now();
+    std::cout << "Generating the noise map took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+
+    generate_png(map, std::to_string(seed) + "_seamless.png");
+    generate_world_png(map, std::to_string(seed) + "_world.png");
 
     return 0;
 }

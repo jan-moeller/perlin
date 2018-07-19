@@ -82,6 +82,8 @@ constexpr std::ostream& operator<<(std::ostream& os, point<T, Dim> const& v) noe
     for (int i = 1; i < Dim; ++i)
         os << ", " << v[i];
     os << " )";
+
+    return os;
 }
 
 template<typename T>
