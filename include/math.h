@@ -48,6 +48,7 @@ namespace noise
         static_assert(std::is_arithmetic_v<T>, "T must be an arithmetic type");
 
         constexpr static T const pi = 3.1415926535897932384626433832795028841971;
+        constexpr static T const e = 2.71828182845904523536028747135266249775724709369995;
     };
 
     /**
