@@ -269,7 +269,7 @@ namespace noise
                 else
                 {
                     T sum = 0;
-                    static_for<N + 1>([n = 0, &sum, &x](auto n)
+                    static_for<N + 1>([&sum, &x](auto n)
                                       {
                                           sum += n_choose_k<int>(N + n, n) * n_choose_k<int>(2 * N + 1, N - n) *
                                                  static_powi<n>(-x);
