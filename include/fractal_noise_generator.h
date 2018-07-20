@@ -17,6 +17,21 @@
 
 namespace noise
 {
+    template<class T, int B = -60>
+    class linear_decay
+    {
+    private:
+        constexpr static T s_slope = B / 100.f;
+    public:
+        constexpr T operator()(int i) const noexcept
+        {
+            return s_slope * static_cast<T>(i) + 1;
+        }
+    };
+
+    template<class T, int B = 60>
+    using linear_growth = linear_decay<T, B>;
+
     template<class T>
     class hyperbolic_decay
     {
@@ -27,10 +42,12 @@ namespace noise
         }
     };
 
-    template<class T, int B = 70>
+    template<class T, int B = 60>
     class exponential_decay
     {
     private:
+        static_assert(B > 0, "B must be greater than zero");
+
         constexpr static T s_base = B / 100.f;
     public:
         constexpr T operator()(int i) const noexcept
@@ -38,6 +55,9 @@ namespace noise
             return powi(s_base, i);
         }
     };
+
+    template<class T, int B = 200>
+    using exponential_growth = exponential_decay<T, B>;
 
     template<class T, int B = -300>
     class polynomial_decay
@@ -50,6 +70,9 @@ namespace noise
             return std::pow(i + 1, s_exp);
         }
     };
+
+    template<class T, int B = 300>
+    using polynomial_growth = polynomial_decay<T, B>;
 
     template<class T, int B = -300>
     class gaussian_decay
@@ -76,7 +99,8 @@ namespace noise
      */
     template<class Gen,
             int Octaves = 3,
-            class WeightFun = hyperbolic_decay<typename Gen::result_t>>
+            class WeightFun = hyperbolic_decay<typename Gen::result_t>,
+            class FrequencyFun = linear_growth<typename Gen::result_t>>
     class fractal_noise_generator
     {
     public:
@@ -93,8 +117,10 @@ namespace noise
         explicit fractal_noise_generator(std::uint_fast32_t seed = std::random_device()()) noexcept
                 : m_noiseGen(seed)
         {
-            WeightFun weightFun;
-            std::generate(m_weights.begin(), m_weights.end(), [&weightFun, i = 0]()mutable { return weightFun(i++); });
+            std::generate(m_weights.begin(), m_weights.end(),
+                          [weightFun = WeightFun(), i = 0]() mutable { return weightFun(i++); });
+            std::generate(m_frequencies.begin(), m_frequencies.end(),
+                          [freqFun = FrequencyFun(), i = 0]() mutable { return freqFun(i++); });
         }
 
         /**
@@ -108,7 +134,7 @@ namespace noise
             result_t result = 0;
             for (int i = 0; i < Octaves; ++i)
             {
-                result += m_noiseGen.at(pointAtOctave(p, i + 1)) * m_weights[i];
+                result += m_noiseGen.at(pointAtOctave(p, i)) * m_weights[i];
             }
 
             return std::clamp(result, static_cast<result_t>(-1), static_cast<result_t>(1));
@@ -118,12 +144,13 @@ namespace noise
         constexpr point<result_t, dimensions> pointAtOctave(point<result_t, dimensions> p, int octave) const noexcept
         {
             for (auto& e : p)
-                e *= octave;
+                e *= m_frequencies[octave];
             return p;
         }
 
         Gen m_noiseGen;
         std::array<result_t, Octaves> m_weights;
+        std::array<result_t, Octaves> m_frequencies;
     };
 
 }
