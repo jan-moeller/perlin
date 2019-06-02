@@ -33,7 +33,7 @@ public:
     using point<T, Dim>::operator=;
 
     template<typename RandEngine>
-    constexpr static vector<T, Dim> make_rand_unit_vec(RandEngine& engine) noexcept
+    constexpr static vector<T, Dim> make_rand_unit_vec(RandEngine&& engine) noexcept
     {
         vector<T, Dim> vec;
         T mag{0};

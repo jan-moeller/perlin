@@ -57,14 +57,14 @@ namespace noise
         /**
          * @param seed Random seed for noise generation
          */
-        explicit perlin_noise_generator(std::uint_fast32_t seed = std::random_device()()) noexcept
-                : m_rand_engine(seed)
+        template <class RndEngine = std::default_random_engine>
+        explicit perlin_noise_generator(RndEngine&& rnd) noexcept
         {
             std::iota(m_permutations.begin(), m_permutations.end(), result_t{0});
-            std::shuffle(m_permutations.begin(), m_permutations.end(), m_rand_engine);
-            std::generate(m_gradients.begin(), m_gradients.end(), [this]()
+            std::shuffle(m_permutations.begin(), m_permutations.end(), std::forward<RndEngine>(rnd));
+            std::generate(m_gradients.begin(), m_gradients.end(), [&]()
             {
-                return vector<result_t, Dim>::make_rand_unit_vec(m_rand_engine);
+                return vector<result_t, Dim>::make_rand_unit_vec(std::forward<RndEngine>(rnd));
             });
         }
 
@@ -128,7 +128,6 @@ namespace noise
     private:
         std::array<int, NumGradients> m_permutations{};
         std::array<vector<result_t, Dim>, NumGradients> m_gradients{};
-        std::mt19937 m_rand_engine;
 
         constexpr vector<result_t, Dim> const& gradient_at(point<grid_coord_t, Dim> const& point) const noexcept
         {

@@ -277,7 +277,7 @@ int main()
 
     auto start = std::chrono::steady_clock::now();
 
-    Gen gen{seed};
+    Gen gen{std::mt19937{seed}};
     map = generate_noise_map(gen, width, height, cellsX, cellsY, [](float x, float y) {return point2d_f{x, y};});
 
     auto end = std::chrono::steady_clock::now();

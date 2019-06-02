@@ -44,8 +44,9 @@ namespace noise
         /**
          * @param seed Random seed for noise generation
          */
-        explicit seamless_noise_generator_2d(std::uint_fast32_t seed = std::random_device()()) noexcept
-                : m_noiseGen(seed)
+        template <class RndEngine = std::default_random_engine>
+        explicit seamless_noise_generator_2d(RndEngine&& rndEngine) noexcept
+                : m_noiseGen(std::forward<RndEngine>(rndEngine))
         {
         }
 

@@ -121,8 +121,9 @@ namespace noise
         /**
          * @param seed Random seed for noise generation
          */
-        explicit fractal_noise_generator(std::uint_fast32_t seed = std::random_device()()) noexcept
-                : m_noiseGen(seed)
+        template <class RndEngine = std::default_random_engine>
+        explicit fractal_noise_generator(RndEngine&& rndEngine) noexcept
+                : m_noiseGen(std::forward<RndEngine>(rndEngine))
         {
             std::generate(m_weights.begin(), m_weights.end(),
                           [weightFun = WeightFun(), i = 0]() mutable { return weightFun(i++); });

@@ -7,11 +7,12 @@ arbitrary dimensions, makes use of modern compile-time computation wherever poss
 points.
 
 Some examples:
-- Evaluate a 2d Perlin noise function (seeded using the literal 42) at point (0, 0):
+- Evaluate a 2d Perlin noise function (seeded with 42) at point (0, 0):
     ```cpp
     constexpr int const Dim = 2;
     constexpr int const Smoothness = 1;
-    perlin_noise_generator<Dim, Smoothness> gen(42);
+    constexpr std::uint_fast32_t const Seed = 42;
+    perlin_noise_generator<Dim, Smoothness> gen(std::mt19937{Seed});
     float val = gen.at(point2d_f(0.f, 0.f));
     ```
     The second template parameter (1) denotes the order of the smoothstep function to use for gradient interpolation.
@@ -27,7 +28,7 @@ Some examples:
     using WeightFun = exponential_decay<float>;
     using FrequencyFun = exponential_growth<float>;
     using Gen = fractal_noise_generator<PerlinNoise, Octaves, WeightFun, FrequencyFun>;
-    Gen gen(42);
+    Gen gen(std::mt19937{42});
     float val = gen.at(point2d_f(0.f, 0.f));
     ```
     Here, 4 octaves are generated, where amplitude decays exponentially with
@@ -42,7 +43,7 @@ Some examples:
     constexpr int const Width = 2;
     constexpr int const Height = 3;
     using Gen = seamless_noise_generator_2d<PerlinNoise, Width, Height>;
-    Gen gen(42);
+    Gen gen(std::mt19937{42});
     float val = gen.at(point2d_f(0.f, 0.f));
     ``` 
     Here a default 4d perlin noise is made to loop in the range [0, 2] on the x axis and range [0, 3] on the y axis.
