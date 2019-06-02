@@ -5,14 +5,17 @@
 #ifndef PERLINNOISE_VECTOR_H
 #define PERLINNOISE_VECTOR_H
 
-#include <type_traits>
+#include "perlin/point.h"
+
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <numeric>
-#include <cmath>
 #include <random>
+#include <type_traits>
 
-#include "perlin/point.h"
+namespace noise
+{
 
 template<typename T, int Dim>
 class vector;
@@ -23,7 +26,7 @@ constexpr T magnitude(vector<T, Dim> const& v) noexcept;
 template<typename T, int Dim>
 class vector : private point<T, Dim>
 {
-public:
+  public:
     static_assert(std::is_floating_point_v<T>, "Must use a floating point type");
 
     using typename point<T, Dim>::const_iterator;
@@ -40,10 +43,7 @@ public:
         std::uniform_real_distribution<T> dist(T{-1}, T{1});
         do
         {
-            std::generate(vec.begin(), vec.end(), [&dist, &engine]()
-            {
-                return dist(engine);
-            });
+            std::generate(vec.begin(), vec.end(), [&dist, &engine]() { return dist(engine); });
             mag = magnitude(vec);
         } while (mag > T{1});
         vec /= mag;
@@ -64,7 +64,10 @@ public:
         return vec;
     }
 
-    constexpr bool operator==(vector const& other) noexcept { return point<T, Dim>::operator==(other); }
+    constexpr bool operator==(vector const& other) noexcept
+    {
+        return point<T, Dim>::operator==(other);
+    }
     constexpr bool operator!=(vector const& other) noexcept { return !(*this == other); }
 
     using point<T, Dim>::operator[];
@@ -160,10 +163,8 @@ constexpr T dot(vector<T, Dim> const& v1, vector<T, Dim> const& v2) noexcept
 template<typename T, int Dim>
 constexpr T sq_magnitude(vector<T, Dim> const& v) noexcept
 {
-    return std::accumulate(v.begin(), v.end(), T{0}, [](T const& e1, T const e2)
-    {
-        return e1 + (e2 * e2);
-    });
+    return std::accumulate(
+        v.begin(), v.end(), T{0}, [](T const& e1, T const e2) { return e1 + (e2 * e2); });
 }
 
 template<typename T, int Dim>
@@ -177,7 +178,8 @@ constexpr vector<T, Dim> normalized(vector<T, Dim> const& v) noexcept
 {
     auto const mag = magnitude(v);
     vector result = v;
-    std::transform(result.begin(), result.end(), result.begin(), [mag](T const& e) { return e / mag; });
+    std::transform(
+        result.begin(), result.end(), result.begin(), [mag](T const& e) { return e / mag; });
     return result;
 }
 
@@ -204,4 +206,6 @@ template<typename T>
 using vec4d = vector<T, 4>;
 using vec4d_f = vec4d<float>;
 
-#endif //PERLINNOISE_VECTOR_H
+} // namespace noise
+
+#endif // PERLINNOISE_VECTOR_H

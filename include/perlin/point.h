@@ -5,16 +5,19 @@
 #ifndef PERLINNOISE_POINT_H
 #define PERLINNOISE_POINT_H
 
-#include <array>
 #include <algorithm>
-#include <type_traits>
-#include <ostream>
+#include <array>
 #include <cmath>
+#include <ostream>
+#include <type_traits>
+
+namespace noise
+{
 
 template<typename T, int Dim>
 class point
 {
-public:
+  public:
     static_assert(std::is_arithmetic_v<T>, "Must use an arithmetic type");
     static_assert(Dim > 0, "Dimensionality must be greater than 0");
 
@@ -25,8 +28,11 @@ public:
     constexpr point(point const&) noexcept = default;
     constexpr point(point&&) noexcept = default;
 
-    template<typename ...U>
-    constexpr explicit point(U&& ...u) : m_elems{{std::forward<U>(u)...}} {}
+    template<typename... U>
+    constexpr explicit point(U&&... u)
+        : m_elems{{std::forward<U>(u)...}}
+    {
+    }
 
     ~point() noexcept = default;
 
@@ -58,7 +64,8 @@ public:
     {
         static_assert(std::is_arithmetic_v<U>, "Can only cast to points of other arithmetic types");
         point<U, Dim> result;
-        std::transform(m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return std::ceil(e); });
+        std::transform(
+            m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return std::ceil(e); });
         return result;
     }
 
@@ -67,11 +74,12 @@ public:
     {
         static_assert(std::is_arithmetic_v<U>, "Can only cast to points of other arithmetic types");
         point<U, Dim> result;
-        std::transform(m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return std::floor(e); });
+        std::transform(
+            m_elems.begin(), m_elems.end(), result.begin(), [](T e) -> U { return std::floor(e); });
         return result;
     }
 
-private:
+  private:
     std::array<T, Dim> m_elems{};
 };
 
@@ -101,5 +109,6 @@ using point4d = point<T, 4>;
 using point4d_i = point4d<int>;
 using point4d_f = point4d<float>;
 
+} // namespace noise
 
-#endif //PERLINNOISE_POINT_H
+#endif // PERLINNOISE_POINT_H
