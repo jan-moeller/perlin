@@ -10,9 +10,9 @@
 #include <numeric>
 #include <algorithm>
 
-#include "point.h"
-#include "vector.h"
-#include "math.h"
+#include "perlin/point.h"
+#include "perlin/vector.h"
+#include "perlin/math.h"
 
 namespace noise
 {

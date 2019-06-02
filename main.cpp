@@ -4,12 +4,11 @@
 #include <map>
 #include <chrono>
 
-#include "point.h"
-#include "vector.h"
-#include "perlin_noise_generator.h"
-#include "fractal_noise_generator.h"
-#include "seamless_noise_generator_2d.h"
-
+#include "perlin/fractal_noise_generator.h"
+#include "perlin/perlin_noise_generator.h"
+#include "perlin/point.h"
+#include "perlin/seamless_noise_generator_2d.h"
+#include "perlin/vector.h"
 
 /*
  * NOTE: Most of this is just boilerplate code to write pngs to disk. Look at

@@ -11,8 +11,8 @@
 
 #include <random>
 
-#include "math.h"
-#include "point.h"
+#include "perlin/math.h"
+#include "perlin/point.h"
 
 namespace noise
 {

@@ -12,7 +12,7 @@
 #include <cmath>
 #include <random>
 
-#include "point.h"
+#include "perlin/point.h"
 
 template<typename T, int Dim>
 class vector;

@@ -13,20 +13,20 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 endif()
 
-add_library(noise INTERFACE)
-target_sources(noise INTERFACE
-        ${PROJECT_SOURCE_DIR}/include/seamless_noise_generator_2d.h
-        ${PROJECT_SOURCE_DIR}/include/fractal_noise_generator.h
-        ${PROJECT_SOURCE_DIR}/include/perlin_noise_generator.h
-        ${PROJECT_SOURCE_DIR}/include/point.h
-        ${PROJECT_SOURCE_DIR}/include/vector.h
-        ${PROJECT_SOURCE_DIR}/include/math.h)
-target_include_directories(noise INTERFACE include)
+add_library(perlin INTERFACE)
+target_sources(perlin INTERFACE
+        ${PROJECT_SOURCE_DIR}/include/perlin/seamless_noise_generator_2d.h
+        ${PROJECT_SOURCE_DIR}/include/perlin/fractal_noise_generator.h
+        ${PROJECT_SOURCE_DIR}/include/perlin/perlin_noise_generator.h
+        ${PROJECT_SOURCE_DIR}/include/perlin/point.h
+        ${PROJECT_SOURCE_DIR}/include/perlin/vector.h
+        ${PROJECT_SOURCE_DIR}/include/perlin/math.h)
+target_include_directories(perlin INTERFACE include)
 
 find_package(PNG)
 if (PNG_FOUND)
-    add_executable(noise_test main.cpp)
-    target_link_libraries(noise_test ${PNG_LIBRARY} noise m)
+    add_executable(perlin_test main.cpp)
+    target_link_libraries(perlin_test ${PNG_LIBRARY} perlin m)
 else()
     message(info "Did not find libpng. Not building test executable.")
 endif ()

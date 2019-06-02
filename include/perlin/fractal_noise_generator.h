@@ -13,8 +13,8 @@
 #include <algorithm>
 #include <ratio>
 
-#include "point.h"
-#include "math.h"
+#include "perlin/point.h"
+#include "perlin/math.h"
 
 namespace noise
 {
