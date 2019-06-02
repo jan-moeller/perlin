@@ -10,6 +10,13 @@
 #include "fractal_noise_generator.h"
 #include "seamless_noise_generator_2d.h"
 
+
+/*
+ * NOTE: Most of this is just boilerplate code to write pngs to disk. Look at
+ *       main() at the end of the file to see where the noise generation takes
+ *       place.
+ */
+
 using namespace noise;
 
 template <typename Gen>
