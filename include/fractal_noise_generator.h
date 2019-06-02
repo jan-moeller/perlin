@@ -11,17 +11,18 @@
 
 #include <random>
 #include <algorithm>
+#include <ratio>
 
 #include "point.h"
 #include "math.h"
 
 namespace noise
 {
-    template<class T, int B = -60>
+    template<class T, class Ratio = std::ratio<6, 10>>
     class linear_decay
     {
     private:
-        constexpr static T s_slope = B / 100.f;
+        constexpr static T s_slope = static_cast<T>(-Ratio::num) / static_cast<T>(Ratio::den);
     public:
         constexpr T operator()(int i) const noexcept
         {
@@ -29,8 +30,8 @@ namespace noise
         }
     };
 
-    template<class T, int B = 60>
-    using linear_growth = linear_decay<T, B>;
+    template<class T, class Ratio = std::ratio<6, 10>>
+    using linear_growth = linear_decay<T, std::ratio_multiply<Ratio, std::ratio<-1>>>;
 
     template<class T>
     class hyperbolic_decay
@@ -42,13 +43,13 @@ namespace noise
         }
     };
 
-    template<class T, int B = 60>
+    template<class T, class Ratio = std::ratio<6, 10>>
     class exponential_decay
     {
     private:
-        static_assert(B > 0, "B must be greater than zero");
+        static_assert(std::ratio_greater_v<Ratio, std::ratio<0, 1>>, "B must be greater than zero");
 
-        constexpr static T s_base = B / 100.f;
+        constexpr static T s_base = static_cast<T>(Ratio::num) / static_cast<T>(Ratio::den);
     public:
         constexpr T operator()(int i) const noexcept
         {
@@ -56,14 +57,14 @@ namespace noise
         }
     };
 
-    template<class T, int B = 200>
-    using exponential_growth = exponential_decay<T, B>;
+    template<class T, class Ratio = std::ratio<2, 1>>
+    using exponential_growth = exponential_decay<T, Ratio>;
 
-    template<class T, int B = -300>
+    template<class T, class Ratio = std::ratio<3, 1>>
     class polynomial_decay
     {
     private:
-        constexpr static T s_exp = B / 100.f;
+        constexpr static T s_exp = static_cast<T>(-Ratio::num) / static_cast<T>(Ratio::den);
     public:
         constexpr T operator()(int i) const noexcept
         {
@@ -71,14 +72,14 @@ namespace noise
         }
     };
 
-    template<class T, int B = 300>
-    using polynomial_growth = polynomial_decay<T, B>;
+    template<class T,  class Ratio = std::ratio<3, 1>>
+    using polynomial_growth = polynomial_decay<T, std::ratio_multiply<Ratio, std::ratio<-1>>>;
 
-    template<class T, int B = -300>
+    template<class T, class Ratio = std::ratio<3, 1>>
     class gaussian_decay
     {
     private:
-        constexpr static T s_stddev = static_powi<2>(B / 100.f);
+        constexpr static T s_stddev = static_powi<2>(static_cast<T>(-Ratio::num) / static_cast<T>(Ratio::den));
     public:
         constexpr T operator()(int i) const noexcept
         {

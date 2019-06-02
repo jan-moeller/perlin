@@ -9,7 +9,9 @@ points.
 Some examples:
 - Evaluate a 2d Perlin noise function (seeded using the literal 42) at point (0, 0):
     ```cpp
-    perlin_noise_generator<2, 1> gen(42);
+    constexpr int const Dim = 2;
+    constexpr int const Smoothness = 1;
+    perlin_noise_generator<Dim, Smoothness> gen(42);
     float val = gen.at(point2d_f(0.f, 0.f));
     ```
     The second template parameter (1) denotes the order of the smoothstep function to use for gradient interpolation.
@@ -18,7 +20,13 @@ Some examples:
     
 - Layer multiple 2d perlin noise functions to generate fractal noise, then evaluate the combined function at point (0, 0).
     ```cpp
-    using Gen = fractal_noise_generator<perlin_noise_generator<2, 1>, 4, exponential_decay<float, 60>, exponential_growth<float, 200>>;
+    constexpr int const Dim = 2;
+    constexpr int const Smoothness = 1;
+    using PerlinNoise = perlin_noise_generator<Dim, Smoothness>;
+    constexpr int const Octaves = 4;
+    using WeightFun = exponential_decay<float>;
+    using FrequencyFun = exponential_growth<float>;
+    using Gen = fractal_noise_generator<PerlinNoise, Octaves, WeightFun, FrequencyFun>;
     Gen gen(42);
     float val = gen.at(point2d_f(0.f, 0.f));
     ```
@@ -30,7 +38,10 @@ Some examples:
     
 - A special 2d noise generator exists which turns 4d noise into seamless 2d noise:
     ```cpp
-    using Gen = seamless_noise_generator_2d<perlin_noise_generator<4>, 2, 3>;
+    using PerlinNoise = perlin_noise_generator<4>;
+    constexpr int const Width = 2;
+    constexpr int const Height = 3;
+    using Gen = seamless_noise_generator_2d<PerlinNoise, Width, Height>;
     Gen gen(42);
     float val = gen.at(point2d_f(0.f, 0.f));
     ``` 

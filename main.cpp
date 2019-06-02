@@ -259,14 +259,14 @@ int main()
 {
     constexpr int const cellsX = 6;
     constexpr int const cellsY = 4;
-    int const width = 1300;
+    int const width = 800;
     int const height = width * (2.f/3.f);
     std::uint_fast32_t seed = 20;
     constexpr int smoothness = 2;
-    constexpr int octaves = 100;
+    constexpr int octaves = 10;
 
 
-    using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves>, cellsX, cellsY>;
+    using Gen = seamless_noise_generator_2d<fractal_noise_generator<perlin_noise_generator<4, smoothness>, octaves, exponential_decay<float>, exponential_growth<float>>, cellsX, cellsY>;
     noisemap<Gen> map;
 
     auto start = std::chrono::steady_clock::now();
